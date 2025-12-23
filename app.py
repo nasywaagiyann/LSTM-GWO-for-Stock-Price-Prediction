@@ -83,13 +83,14 @@ def load_saved_components():
     model = load_model("lstm_gwo_model.h5")
     scaler = joblib.load("scaler.pkl")
     
-    with open('saved_models/metadata.json', 'r') as f:
+    with open("metadata.json", "r") as f:
         metadata = json.load(f)
     
-    with open('saved_models/example_data.json', 'r') as f:
+    with open("example_data.json", "r") as f:
         example_data = json.load(f)
     
     return model, scaler, metadata, example_data
+  
 
 # Load components with error handling
 with st.spinner("🔄 Loading AI model..."):
@@ -460,3 +461,4 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
+
