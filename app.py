@@ -226,18 +226,6 @@ if predict_button:
         # Create results container
         st.markdown("---")
         st.markdown("## 📋 Forecast Results")
-        
-        # Create columns for different visualizations
-        viz_col1, viz_col2 = st.columns([2, 1])
-        
-        with viz_col1:
-            # Interactive Plotly Chart
-            fig = make_subplots(
-                rows=2, cols=1,
-                subplot_titles=('Price Forecast Timeline', 'Daily Price Movement'),
-                vertical_spacing=0.15,
-                row_heights=[0.7, 0.3]
-            )
             
             # Main price line
             fig.add_trace(
@@ -459,6 +447,7 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
+
 
 
 
