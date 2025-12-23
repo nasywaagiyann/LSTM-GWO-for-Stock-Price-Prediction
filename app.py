@@ -104,7 +104,7 @@ with st.spinner("🔄 Loading AI model..."):
 # ------------------------------
 # SIDEBAR - INPUT SECTION
 # ------------------------------
-st.sidebar.markdown("## BBNI Stock Price ")
+st.sidebar.markdown("## ")
 
 # Display model info badge
 st.sidebar.markdown("""
@@ -461,6 +461,7 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
+
 
 
 
