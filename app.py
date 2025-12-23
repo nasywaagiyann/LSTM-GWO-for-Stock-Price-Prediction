@@ -80,8 +80,8 @@ st.markdown("---")
 @st.cache_resource
 def load_saved_components():
     """Load model, scaler, and metadata"""
-    model = load_model('saved_models/lstm_gwo_model.h5')
-    scaler = joblib.load('saved_models/scaler.pkl')
+    model = load_model("lstm_gwo_model.h5")
+    scaler = joblib.load("scaler.pkl")
     
     with open('saved_models/metadata.json', 'r') as f:
         metadata = json.load(f)
@@ -457,5 +457,6 @@ with footer_col2:
 
 with footer_col3:
     st.markdown(f"**Loaded**: {metadata.get('saved_date', 'N/A')}")
+
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
