@@ -226,6 +226,13 @@ if predict_button:
         # Create results container
         st.markdown("---")
         st.markdown("## 📋 Forecast Results")
+        
+        # Create columns for different visualizations
+        viz_col1, viz_col2 = st.columns([2, 1])
+        
+        with viz_col1:
+            # Interactive Plotly Chart - HANYA SATU GRAFIK
+            fig = go.Figure()
             
             # Main price line
             fig.add_trace(
@@ -236,9 +243,8 @@ if predict_button:
                     name='Predicted Price',
                     line=dict(color='#667eea', width=3),
                     marker=dict(size=10, color='#764ba2'),
-                    hovertemplate='<b>%{x|%b %d}</b><br>Rp %{y:,.2f}<extra></extra>'
-                ),
-                row=1, col=1
+                    hovertemplate='<b>%{x|%b %d}</b><br>Price: Rp %{y:,.2f}<extra></extra>'
+                )
             )
             
             # Fill area under curve
@@ -251,28 +257,25 @@ if predict_button:
                     line=dict(color='rgba(255,255,255,0)'),
                     hoverinfo='skip',
                     showlegend=False
-                ),
-                row=1, col=1
+                )
             )
             
-            # Bar chart for daily changes
-            daily_changes = np.diff(predictions, prepend=current_price)
-            colors = ['#4CAF50' if x >= 0 else '#F44336' for x in daily_changes]
-            
+            # Add current price point
             fig.add_trace(
-                go.Bar(
-                    x=future_dates,
-                    y=daily_changes,
-                    name='Daily Change',
-                    marker_color=colors,
-                    hovertemplate='<b>%{x|%b %d}</b><br>Change: Rp %{y:,.2f}<extra></extra>'
-                ),
-                row=2, col=1
+                go.Scatter(
+                    x=[last_date],
+                    y=[current_price],
+                    mode='markers',
+                    name='Current Price',
+                    marker=dict(size=12, color='#4CAF50', symbol='star'),
+                    hovertemplate='<b>Current</b><br>Price: Rp %{y:,.2f}<extra></extra>'
+                )
             )
             
             # Update layout
             fig.update_layout(
-                height=600,
+                height=500,
+                title='Price Forecast Timeline',
                 showlegend=True,
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
@@ -280,13 +283,10 @@ if predict_button:
                     bgcolor="white",
                     font_size=12,
                     font_family="Arial"
-                )
+                ),
+                xaxis_title="Date",
+                yaxis_title="Price (Rp)"
             )
-            
-            fig.update_xaxes(title_text="Date", row=1, col=1)
-            fig.update_xaxes(title_text="Date", row=2, col=1)
-            fig.update_yaxes(title_text="Price (Rp)", row=1, col=1)
-            fig.update_yaxes(title_text="Change (Rp)", row=2, col=1)
             
             st.plotly_chart(fig, use_container_width=True, theme="streamlit")
         
@@ -447,9 +447,3 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
-
-
-
-
-
-
