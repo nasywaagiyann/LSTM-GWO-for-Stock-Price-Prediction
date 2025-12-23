@@ -19,19 +19,17 @@ st.set_page_config(
 )
 
 # Custom CSS for better styling
-st.html("""
+st.markdown("""
 <style>
-/* HILANGKAN SPACE ATAS SIDEBAR */
-section[data-testid="stSidebar"] > div {
-    padding-top: 0rem;
-}
-
-/* OPTIONAL: rapatkan isi sidebar */
-section[data-testid="stSidebar"] .block-container {
-    padding-top: 0.5rem;
-}
-</style>
-""")
+    .main-header {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
     .sub-header {
         color: #666;
         text-align: center;
