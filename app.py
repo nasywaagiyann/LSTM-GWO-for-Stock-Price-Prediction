@@ -104,8 +104,6 @@ with st.spinner("🔄 Loading AI model..."):
 # ------------------------------
 # SIDEBAR - INPUT SECTION
 # ------------------------------
-st.sidebar.markdown("## ")
-
 # Display model info badge
 st.sidebar.markdown("""
 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -461,6 +459,7 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
+
 
 
 
