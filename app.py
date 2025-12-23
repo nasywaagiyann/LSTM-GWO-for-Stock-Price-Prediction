@@ -12,24 +12,26 @@ from tensorflow.keras.models import load_model
 # PAGE CONFIGURATION
 # ------------------------------
 st.set_page_config(
-    page_title="GWO-LSTM Stock Forecaster",
+    page_title="Stock Price Forecaster",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Custom CSS for better styling
-st.markdown("""
+st.html("""
 <style>
-    .main-header {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
+/* HILANGKAN SPACE ATAS SIDEBAR */
+section[data-testid="stSidebar"] > div {
+    padding-top: 0rem;
+}
+
+/* OPTIONAL: rapatkan isi sidebar */
+section[data-testid="stSidebar"] .block-container {
+    padding-top: 0.5rem;
+}
+</style>
+""")
     .sub-header {
         color: #666;
         text-align: center;
@@ -461,4 +463,5 @@ with footer_col3:
 
 
 st.caption("© 2024 AI Stock Predictor | For educational and research purposes")
+
 
