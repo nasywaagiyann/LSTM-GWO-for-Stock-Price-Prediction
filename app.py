@@ -8,52 +8,43 @@ import joblib
 from tensorflow.keras.models import load_model
 
 # ------------------------------
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ------------------------------
 st.set_page_config(
     page_title="Stock Price Forecaster",
     page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# ------------------------------
-# HEADER
-# ------------------------------
-st.title("📊 GWO–LSTM Stock Predictor")
-st.caption("AI-based Stock Price Forecasting")
-
+st.title("📈 GWO–LSTM Stock Predictor")
 st.markdown("---")
 
 # ------------------------------
-# LOAD MODEL & COMPONENTS
+# LOAD MODEL
 # ------------------------------
 @st.cache_resource
-def load_saved_components():
+def load_all():
     model = load_model("lstm_gwo_model.h5")
     scaler = joblib.load("scaler.pkl")
 
-    with open("metadata.json", "r") as f:
+    with open("metadata.json") as f:
         metadata = json.load(f)
 
-    with open("example_data.json", "r") as f:
+    with open("example_data.json") as f:
         example_data = json.load(f)
 
     return model, scaler, metadata, example_data
 
 
-with st.spinner("Loading model..."):
-    model, scaler, metadata, example_data = load_saved_components()
+model, scaler, metadata, example_data = load_all()
+
+last_sequence = np.array(example_data["last_sequence"])
 
 # ------------------------------
 # SIDEBAR INPUT
 # ------------------------------
-last_sequence = np.array(example_data["last_sequence"])
-
 current_price = st.sidebar.number_input(
-    "Current Stock Price (Rp)",
-    min_value=0.0,
-    max_value=10_000_000.0,
+    "Current Price (Rp)",
     value=float(
         scaler.inverse_transform(
             last_sequence[-1].reshape(-1, 1)
@@ -62,115 +53,88 @@ current_price = st.sidebar.number_input(
     step=100.0
 )
 
-forecast_days = st.sidebar.slider(
-    "Forecast Days",
-    min_value=1,
-    max_value=30,
-    value=7
-)
+forecast_days = st.sidebar.slider("Forecast Days", 1, 30, 7)
 
 # ------------------------------
-# PREDICTION FUNCTION
-# (TIDAK DIUBAH)
+# PREDICTION FUNCTION (ASLI)
 # ------------------------------
-def forecast_future_streamlit(model, current_price, scaler, days=7):
-    current_price_norm = scaler.transform([[current_price]])[0][0]
+def forecast_future_streamlit(model, current_price, scaler, days):
+    current_norm = scaler.transform([[current_price]])[0][0]
+    curr = np.array([current_norm])
 
-    curr = np.array([current_price_norm])
     preds_norm = []
-
     for _ in range(days):
-        curr_reshaped = curr.reshape(1, 1, 1)
-        pred = model.predict(curr_reshaped, verbose=0)[0][0]
+        pred = model.predict(curr.reshape(1, 1, 1), verbose=0)[0][0]
         preds_norm.append(pred)
         curr = np.array([pred])
 
     preds_norm = np.array(preds_norm).reshape(-1, 1)
-    future_prices = scaler.inverse_transform(preds_norm).flatten()
+    preds = scaler.inverse_transform(preds_norm).flatten()
 
-    return future_prices
+    return preds
+
 
 # ------------------------------
 # MAIN
 # ------------------------------
 if st.button("🚀 Generate Forecast"):
-    with st.spinner("Predicting..."):
-        predictions = forecast_future_streamlit(
-            model, current_price, scaler, forecast_days
-        )
+    predictions = forecast_future_streamlit(
+        model, current_price, scaler, forecast_days
+    )
 
-        last_date = datetime.now()
-        future_dates = [
-            last_date + timedelta(days=i + 1)
-            for i in range(forecast_days)
-        ]
+    # ⬅️ INI PENTING
+    predictions = predictions.tolist()
 
-    st.markdown("## 📈 Forecast Result")
+    today = datetime.now()
+    future_dates = [
+        today + timedelta(days=i + 1)
+        for i in range(forecast_days)
+    ]
 
     # ===============================
-    # GRAPH (FIXED – FINAL VERSION)
+    # GRAPH (FIX PALING BENAR)
     # ===============================
+
+    # Gabungkan current + prediction (VISUAL SAJA)
+    plot_dates = [today] + future_dates
+    plot_prices = [current_price] + predictions
+
     fig = go.Figure()
 
-    # Prediction line
     fig.add_trace(
         go.Scatter(
-            x=future_dates,
-            y=predictions,
+            x=plot_dates,
+            y=plot_prices,
             mode="lines+markers",
-            name="Predicted Price",
-            line=dict(width=3),
-            marker=dict(size=8),
-            hovertemplate="<b>%{x|%b %d}</b><br>Rp %{y:,.2f}<extra></extra>"
+            name="Price Forecast",
+            hovertemplate="Rp %{y:,.2f}<extra></extra>"
         )
     )
 
-    # Current price marker
-    fig.add_trace(
-        go.Scatter(
-            x=[last_date],
-            y=[current_price],
-            mode="markers",
-            name="Current Price",
-            marker=dict(size=12, symbol="star"),
-            hovertemplate="<b>Current</b><br>Rp %{y:,.2f}<extra></extra>"
-        )
-    )
-
-    # Layout (TANPA MENGUBAH DATA)
     fig.update_layout(
         height=500,
-        title="Price Forecast Timeline",
+        title="Stock Price Forecast",
         xaxis_title="Date",
         yaxis_title="Price (Rp)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        showlegend=True
-    )
-
-    # KUNCI SKALA Y (BIAR SESUAI ANGKA)
-    fig.update_yaxes(
-        range=[
-            predictions.min() * 0.995,
-            predictions.max() * 1.005
-        ]
+        yaxis=dict(
+            rangemode="normal",   # ⬅️ WAJIB
+            zeroline=False
+        ),
+        plot_bgcolor="white"
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
     # ------------------------------
-    # TABLE OUTPUT
+    # TABLE (BUKTI ANGKA SAMA)
     # ------------------------------
     df = pd.DataFrame({
         "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
-        "Predicted Price": predictions
+        "Prediction": predictions
     })
 
-    st.markdown("## 📋 Numerical Prediction")
-    st.dataframe(df, use_container_width=True)
+    st.markdown("### 📋 Numerical Output")
+    st.dataframe(df)
 
 else:
-    st.info("Masukkan harga dan klik **Generate Forecast**")
-
-st.markdown("---")
-st.caption("Model: GWO–LSTM | Visualization fixed without altering predictions")
+    st.info("Masukkan harga lalu klik Generate Forecast")
