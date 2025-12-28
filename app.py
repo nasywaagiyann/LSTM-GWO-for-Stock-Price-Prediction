@@ -77,8 +77,8 @@ st.markdown("""
 # ==============================
 st.markdown("""
 <div class="main-header">
-    <h1>📈 GWO–LSTM Stock Price Predictor</h1>
-    <p>Hybrid Optimization & Deep Learning for Time Series Forecasting</p>
+    <h1>📈 GWO–LSTM BBNI Stock Price Predictor</h1>
+    <p>LSTM - GWO for Time Series Forecasting</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -239,3 +239,4 @@ if st.button("🚀 Generate Forecast"):
 
 else:
     st.info("💡 Input current price and click **Generate Forecast** to start prediction.")
+
