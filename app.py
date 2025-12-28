@@ -29,33 +29,45 @@ from tensorflow.keras.models import load_model
 # ==============================
 st.markdown("""
 <style>
+    body {
+        background-color: #f5f7fa;
+    }
+
     .main-header {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
+        padding: 2rem;
+        border-radius: 16px;
         color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .section-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 14px;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .step-box {
+        background: #f8f9fc;
+        padding: 1rem;
+        border-radius: 12px;
+        border-left: 5px solid #667eea;
+        margin-bottom: 1rem;
     }
 
     .stButton > button {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 1rem;
-        margin: 0 auto;
-        display: block;
-    }
-
-    .info-card {
-        background: #f8f9fa;
-        padding: 1rem;
+        padding: 0.8rem 2.2rem;
         border-radius: 10px;
-        border-left: 4px solid #667eea;
-        margin: 1rem 0;
+        font-weight: bold;
+        font-size: 1.05rem;
+        display: block;
+        margin: 0 auto;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -65,8 +77,8 @@ st.markdown("""
 # ==============================
 st.markdown("""
 <div class="main-header">
-    <h1 style="margin:0;">📈 GWO–LSTM Stock Predictor</h1>
-    <p style="margin:0; opacity:0.9;">Advanced Stock Price Forecasting</p>
+    <h1>📈 GWO–LSTM Stock Price Predictor</h1>
+    <p>Hybrid Optimization & Deep Learning for Time Series Forecasting</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -88,14 +100,15 @@ def load_all():
 
 
 model, scaler, metadata, example_data = load_all()
-
 last_sequence = np.array(example_data["last_sequence"])
 
 # ==============================
-# SIDEBAR INPUT
+# SIDEBAR
 # ==============================
+st.sidebar.header("⚙️ Input Parameter")
+
 current_price = st.sidebar.number_input(
-    "Current Price (Rp)",
+    "Current Stock Price (Rp)",
     value=float(
         scaler.inverse_transform(
             last_sequence[-1].reshape(-1, 1)
@@ -105,11 +118,45 @@ current_price = st.sidebar.number_input(
 )
 
 forecast_days = st.sidebar.slider(
-    "Forecast Days",
+    "Forecast Horizon (Days)",
     min_value=1,
     max_value=30,
     value=7
 )
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "📌 **Model**: LSTM optimized using Grey Wolf Optimizer (GWO)"
+)
+
+# ==============================
+# HOW IT WORKS
+# ==============================
+st.markdown("""
+<div class="section-card">
+<h3>🧠 How It Works</h3>
+
+<div class="step-box">
+<b>1. Data Normalization</b><br>
+Historical stock prices are scaled using <i>Min-Max Normalization</i> to ensure stable neural network training.
+</div>
+
+<div class="step-box">
+<b>2. Hyperparameter Optimization (GWO)</b><br>
+Grey Wolf Optimizer (GWO) is used to search for optimal LSTM hyperparameters by minimizing prediction error.
+</div>
+
+<div class="step-box">
+<b>3. Deep Learning Forecast (LSTM)</b><br>
+The optimized LSTM model captures temporal dependencies in stock price movements.
+</div>
+
+<div class="step-box">
+<b>4. Recursive Multi-step Prediction</b><br>
+Predictions are generated iteratively for future days using the previous output as the next input.
+</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ==============================
 # FORECAST FUNCTION (ASLI)
@@ -133,17 +180,16 @@ def forecast_future_streamlit(model, current_price, scaler, days):
     return preds
 
 # ==============================
-# MAIN
+# MAIN ACTION
 # ==============================
 if st.button("🚀 Generate Forecast"):
+
     predictions = forecast_future_streamlit(
         model,
         current_price,
         scaler,
         forecast_days
-    )
-
-    predictions = predictions.tolist()
+    ).tolist()
 
     today = datetime.now()
     future_dates = [
@@ -154,48 +200,42 @@ if st.button("🚀 Generate Forecast"):
     # ==============================
     # GRAPH
     # ==============================
-    plot_dates = [today] + future_dates
-    plot_prices = [current_price] + predictions
-
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=plot_dates,
-            y=plot_prices,
+            x=[today] + future_dates,
+            y=[current_price] + predictions,
             mode="lines+markers",
-            name="Price Forecast",
-            line=dict(color="#667eea", width=3),
+            line=dict(width=3, color="#667eea"),
             hovertemplate="Rp %{y:,.2f}<extra></extra>"
         )
     )
 
     fig.update_layout(
-        title="Stock Price Forecast",
+        title="📊 Stock Price Forecast",
         xaxis_title="Date",
         yaxis_title="Price (Rp)",
-        height=500,
+        height=520,
         plot_bgcolor="white",
         yaxis=dict(zeroline=False)
     )
 
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ==============================
     # TABLE
     # ==============================
     df = pd.DataFrame({
         "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
-        "Prediction": predictions
+        "Predicted Price (Rp)": predictions
     })
 
-    st.markdown("### 📋 Hasil Prediksi")
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.subheader("📋 Forecast Result Table")
     st.dataframe(df, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 else:
-    st.markdown("""
-    <div class="info-card">
-        <h4 style="margin:0; color:#667eea;">🎯 Ready to Forecast</h4>
-        <p>Input price lalu klik <b>Generate Forecast</b></p>
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.info("💡 Input current price and click **Generate Forecast** to start prediction.")
