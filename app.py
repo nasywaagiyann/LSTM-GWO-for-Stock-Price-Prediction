@@ -240,3 +240,4 @@ if st.button("🚀 Generate Forecast"):
 else:
     st.info("💡 Input current price and click **Generate Forecast** to start prediction.")
 
+
