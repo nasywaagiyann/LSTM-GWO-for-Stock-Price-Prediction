@@ -1,4 +1,21 @@
+# =========================================================
+# GWO–LSTM STOCK PRICE FORECASTER (STREAMLIT FINAL FIX)
+# =========================================================
+
 import streamlit as st
+
+# ==============================
+# PAGE CONFIG — WAJIB PALING ATAS
+# ==============================
+st.set_page_config(
+    page_title="Stock Price Forecaster",
+    page_icon="📊",
+    layout="wide"
+)
+
+# ==============================
+# IMPORT LAIN
+# ==============================
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -7,22 +24,20 @@ import json
 import joblib
 from tensorflow.keras.models import load_model
 
-# ------------------------------
-# TAMBAH CSS SAJA
-# ------------------------------
+# ==============================
+# CSS CUSTOM
+# ==============================
 st.markdown("""
 <style>
-    /* HEADER */
     .main-header {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         padding: 1.5rem;
         border-radius: 10px;
         color: white;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    
-    /* BUTTON */
+
     .stButton > button {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -34,8 +49,7 @@ st.markdown("""
         margin: 0 auto;
         display: block;
     }
-    
-    /* CARD */
+
     .info-card {
         background: #f8f9fa;
         padding: 1rem;
@@ -43,35 +57,22 @@ st.markdown("""
         border-left: 4px solid #667eea;
         margin: 1rem 0;
     }
-    
-    /* TABLE */
-    .dataframe {
-        border-radius: 10px;
-        overflow: hidden;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------------------
-# PAGE CONFIG - SAMA
-# ------------------------------
-st.set_page_config(
-    page_title="Stock Price Forecaster",
-    page_icon="📊",
-    layout="wide"
-)
-
-# GANTI TITLE BIASA
+# ==============================
+# HEADER
+# ==============================
 st.markdown("""
 <div class="main-header">
-    <h1 style="margin:0; font-size:2rem;">📈 GWO–LSTM Stock Predictor</h1>
-    <p style="margin:0; opacity:0.9; font-size:1rem;">Advanced Forecasting Model</p>
+    <h1 style="margin:0;">📈 GWO–LSTM Stock Predictor</h1>
+    <p style="margin:0; opacity:0.9;">Advanced Stock Price Forecasting</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ------------------------------
-# LOAD MODEL - SAMA
-# ------------------------------
+# ==============================
+# LOAD MODEL & DATA (TIDAK DIUBAH)
+# ==============================
 @st.cache_resource
 def load_all():
     model = load_model("lstm_gwo_model.h5")
@@ -90,9 +91,9 @@ model, scaler, metadata, example_data = load_all()
 
 last_sequence = np.array(example_data["last_sequence"])
 
-# ------------------------------
-# SIDEBAR INPUT - SAMA
-# ------------------------------
+# ==============================
+# SIDEBAR INPUT
+# ==============================
 current_price = st.sidebar.number_input(
     "Current Price (Rp)",
     value=float(
@@ -103,18 +104,26 @@ current_price = st.sidebar.number_input(
     step=100.0
 )
 
-forecast_days = st.sidebar.slider("Forecast Days", 1, 30, 7)
+forecast_days = st.sidebar.slider(
+    "Forecast Days",
+    min_value=1,
+    max_value=30,
+    value=7
+)
 
-# ------------------------------
-# PREDICTION FUNCTION - SAMA
-# ------------------------------
+# ==============================
+# FORECAST FUNCTION (ASLI)
+# ==============================
 def forecast_future_streamlit(model, current_price, scaler, days):
     current_norm = scaler.transform([[current_price]])[0][0]
     curr = np.array([current_norm])
 
     preds_norm = []
     for _ in range(days):
-        pred = model.predict(curr.reshape(1, 1, 1), verbose=0)[0][0]
+        pred = model.predict(
+            curr.reshape(1, 1, 1),
+            verbose=0
+        )[0][0]
         preds_norm.append(pred)
         curr = np.array([pred])
 
@@ -123,16 +132,17 @@ def forecast_future_streamlit(model, current_price, scaler, days):
 
     return preds
 
-
-# ------------------------------
-# MAIN - SAMA, HANYA TAMBAH CSS
-# ------------------------------
+# ==============================
+# MAIN
+# ==============================
 if st.button("🚀 Generate Forecast"):
     predictions = forecast_future_streamlit(
-        model, current_price, scaler, forecast_days
+        model,
+        current_price,
+        scaler,
+        forecast_days
     )
 
-    # ⬅️ INI PENTING - SAMA
     predictions = predictions.tolist()
 
     today = datetime.now()
@@ -141,55 +151,50 @@ if st.button("🚀 Generate Forecast"):
         for i in range(forecast_days)
     ]
 
-    # ===============================
-    # GRAPH - SAMA, TAMBAH WARNA
-    # ===============================
+    # ==============================
+    # GRAPH
+    # ==============================
     plot_dates = [today] + future_dates
     plot_prices = [current_price] + predictions
 
     fig = go.Figure()
-
     fig.add_trace(
         go.Scatter(
             x=plot_dates,
             y=plot_prices,
             mode="lines+markers",
             name="Price Forecast",
-            line=dict(color='#667eea', width=3),
+            line=dict(color="#667eea", width=3),
             hovertemplate="Rp %{y:,.2f}<extra></extra>"
         )
     )
 
     fig.update_layout(
-        height=500,
         title="Stock Price Forecast",
         xaxis_title="Date",
         yaxis_title="Price (Rp)",
-        yaxis=dict(
-            rangemode="normal",
-            zeroline=False
-        ),
-        plot_bgcolor="white"
+        height=500,
+        plot_bgcolor="white",
+        yaxis=dict(zeroline=False)
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ------------------------------
-    # TABLE - SAMA
-    # ------------------------------
+    # ==============================
+    # TABLE
+    # ==============================
     df = pd.DataFrame({
         "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
         "Prediction": predictions
     })
 
     st.markdown("### 📋 Numerical Output")
-    st.dataframe(df)
+    st.dataframe(df, use_container_width=True)
 
 else:
-    # GANTI INFO BIASA DENGAN CARD
     st.markdown("""
     <div class="info-card">
         <h4 style="margin:0; color:#667eea;">🎯 Ready to Forecast</h4>
-        <p>Enter price and click <strong>Generate Forecast</strong></p>
+        <p>Input price lalu klik <b>Generate Forecast</b></p>
     </div>
     """, unsafe_allow_html=True)
