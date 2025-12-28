@@ -83,50 +83,62 @@ last_price = float(
 )
 
 # ==============================
-# SIDEBAR (TIDAK KOSONG LAGI)
+# SIDEBAR (BERSIH & MASUK AKAL)
 # ==============================
-st.sidebar.markdown("## ⚙️ Forecast Settings")
+st.sidebar.markdown("## ⚙️ Forecast Panel")
 
-# INFO HARGA TERAKHIR
+# INFO MODEL (READ-ONLY)
+st.sidebar.markdown("### 🤖 Model Information")
+st.sidebar.write("Model Type : **LSTM optimized with GWO**")
+st.sidebar.write("Input Shape : **(1, 1)**")
+st.sidebar.write("Forecast Mode : **Recursive**")
+
+st.sidebar.markdown("---")
+
+# INFO DATA
+st.sidebar.markdown("### 📊 Data Information")
+st.sidebar.write(f"Scaler : **{type(scaler).__name__}**")
+st.sidebar.write("Target : **Stock Closing Price**")
+
+last_price = float(
+    scaler.inverse_transform(
+        last_sequence[-1].reshape(-1, 1)
+    )[0][0]
+)
+
 st.sidebar.metric(
     label="Last Known Price",
     value=f"Rp {last_price:,.2f}"
 )
 
-# INPUT HARGA SEKARANG
+st.sidebar.markdown("---")
+
+# INPUT UTAMA (MODEL)
+st.sidebar.markdown("### 🔢 Forecast Input")
+
 current_price = st.sidebar.number_input(
     "Current Price (Rp)",
     value=last_price,
     step=100.0
 )
 
-# FORECAST DAYS
 forecast_days = st.sidebar.slider(
     "Forecast Horizon (Days)",
     min_value=1,
     max_value=30,
-    value=7,
-    help="Number of future days to predict"
-)
-
-# WHAT-IF ADJUSTMENT
-adjustment = st.sidebar.slider(
-    "Price Adjustment (%)",
-    -10.0, 10.0, 0.0, step=0.5,
-    help="Optimistic / pessimistic scenario (input only)"
-)
-
-adjusted_price = current_price * (1 + adjustment / 100)
-
-# CONFIDENCE BAND (VISUAL ONLY)
-confidence_pct = st.sidebar.slider(
-    "Visual Confidence Band (%)",
-    1, 20, 5,
-    help="Illustrative uncertainty band (not statistical CI)"
+    value=7
 )
 
 st.sidebar.markdown("---")
-st.sidebar.caption("ℹ️ Model weights are NOT retrained")
+
+# INFO OUTPUT
+st.sidebar.markdown("### 📈 Output Information")
+st.sidebar.write("• Output scale : **Original price**")
+st.sidebar.write("• Visualization : **Line chart**")
+st.sidebar.write("• Table : **Daily prediction**")
+
+st.sidebar.caption("ℹ️ No retraining – prediction only")
+
 
 # ==============================
 # FORECAST FUNCTION (ASLI)
@@ -231,3 +243,4 @@ else:
         <p>Atur parameter di sidebar lalu klik <b>Generate Forecast</b></p>
     </div>
     """, unsafe_allow_html=True)
+
