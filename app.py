@@ -188,7 +188,7 @@ if st.button("🚀 Generate Forecast"):
         "Prediction": predictions
     })
 
-    st.markdown("### 📋 Numerical Output")
+    st.markdown("### 📋 Hasil Prediksi")
     st.dataframe(df, use_container_width=True)
 
 else:
@@ -198,3 +198,4 @@ else:
         <p>Input price lalu klik <b>Generate Forecast</b></p>
     </div>
     """, unsafe_allow_html=True)
+
