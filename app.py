@@ -1,11 +1,11 @@
 # =========================================================
-# GWO–LSTM STOCK PRICE FORECASTER (STREAMLIT FINAL FIX)
+# GWO–LSTM STOCK PRICE FORECASTER (FINAL + RICH SIDEBAR)
 # =========================================================
 
 import streamlit as st
 
 # ==============================
-# PAGE CONFIG — WAJIB PALING ATAS
+# PAGE CONFIG (WAJIB PALING ATAS)
 # ==============================
 st.set_page_config(
     page_title="Stock Price Forecaster",
@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ==============================
-# IMPORT LAIN
+# IMPORT
 # ==============================
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ import joblib
 from tensorflow.keras.models import load_model
 
 # ==============================
-# CSS CUSTOM
+# CSS
 # ==============================
 st.markdown("""
 <style>
@@ -35,21 +35,7 @@ st.markdown("""
         border-radius: 10px;
         color: white;
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
-    .stButton > button {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 1rem;
-        margin: 0 auto;
-        display: block;
-    }
-
     .info-card {
         background: #f8f9fa;
         padding: 1rem;
@@ -66,12 +52,12 @@ st.markdown("""
 st.markdown("""
 <div class="main-header">
     <h1 style="margin:0;">📈 GWO–LSTM Stock Predictor</h1>
-    <p style="margin:0; opacity:0.9;">Advanced Stock Price Forecasting</p>
+    <p style="margin:0; opacity:0.9;">Advanced Forecasting Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
 
 # ==============================
-# LOAD MODEL & DATA (TIDAK DIUBAH)
+# LOAD MODEL (ASLI)
 # ==============================
 @st.cache_resource
 def load_all():
@@ -88,28 +74,59 @@ def load_all():
 
 
 model, scaler, metadata, example_data = load_all()
-
 last_sequence = np.array(example_data["last_sequence"])
 
+last_price = float(
+    scaler.inverse_transform(
+        last_sequence[-1].reshape(-1, 1)
+    )[0][0]
+)
+
 # ==============================
-# SIDEBAR INPUT
+# SIDEBAR (TIDAK KOSONG LAGI)
 # ==============================
+st.sidebar.markdown("## ⚙️ Forecast Settings")
+
+# INFO HARGA TERAKHIR
+st.sidebar.metric(
+    label="Last Known Price",
+    value=f"Rp {last_price:,.2f}"
+)
+
+# INPUT HARGA SEKARANG
 current_price = st.sidebar.number_input(
     "Current Price (Rp)",
-    value=float(
-        scaler.inverse_transform(
-            last_sequence[-1].reshape(-1, 1)
-        )[0][0]
-    ),
+    value=last_price,
     step=100.0
 )
 
+# FORECAST DAYS
 forecast_days = st.sidebar.slider(
-    "Forecast Days",
+    "Forecast Horizon (Days)",
     min_value=1,
     max_value=30,
-    value=7
+    value=7,
+    help="Number of future days to predict"
 )
+
+# WHAT-IF ADJUSTMENT
+adjustment = st.sidebar.slider(
+    "Price Adjustment (%)",
+    -10.0, 10.0, 0.0, step=0.5,
+    help="Optimistic / pessimistic scenario (input only)"
+)
+
+adjusted_price = current_price * (1 + adjustment / 100)
+
+# CONFIDENCE BAND (VISUAL ONLY)
+confidence_pct = st.sidebar.slider(
+    "Visual Confidence Band (%)",
+    1, 20, 5,
+    help="Illustrative uncertainty band (not statistical CI)"
+)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("ℹ️ Model weights are NOT retrained")
 
 # ==============================
 # FORECAST FUNCTION (ASLI)
@@ -138,12 +155,10 @@ def forecast_future_streamlit(model, current_price, scaler, days):
 if st.button("🚀 Generate Forecast"):
     predictions = forecast_future_streamlit(
         model,
-        current_price,
+        adjusted_price,
         scaler,
         forecast_days
-    )
-
-    predictions = predictions.tolist()
+    ).tolist()
 
     today = datetime.now()
     future_dates = [
@@ -151,21 +166,43 @@ if st.button("🚀 Generate Forecast"):
         for i in range(forecast_days)
     ]
 
-    # ==============================
-    # GRAPH
-    # ==============================
     plot_dates = [today] + future_dates
-    plot_prices = [current_price] + predictions
+    plot_prices = [adjusted_price] + predictions
+
+    # CONFIDENCE BAND
+    upper = np.array(plot_prices) * (1 + confidence_pct / 100)
+    lower = np.array(plot_prices) * (1 - confidence_pct / 100)
 
     fig = go.Figure()
+
     fig.add_trace(
         go.Scatter(
             x=plot_dates,
             y=plot_prices,
             mode="lines+markers",
-            name="Price Forecast",
-            line=dict(color="#667eea", width=3),
-            hovertemplate="Rp %{y:,.2f}<extra></extra>"
+            name="Forecast",
+            line=dict(width=3)
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=plot_dates,
+            y=upper,
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo="skip"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=plot_dates,
+            y=lower,
+            fill="tonexty",
+            name="Confidence Band",
+            opacity=0.2,
+            hoverinfo="skip"
         )
     )
 
@@ -174,15 +211,11 @@ if st.button("🚀 Generate Forecast"):
         xaxis_title="Date",
         yaxis_title="Price (Rp)",
         height=500,
-        plot_bgcolor="white",
-        yaxis=dict(zeroline=False)
+        plot_bgcolor="white"
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ==============================
-    # TABLE
-    # ==============================
     df = pd.DataFrame({
         "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
         "Prediction": predictions
@@ -194,7 +227,7 @@ if st.button("🚀 Generate Forecast"):
 else:
     st.markdown("""
     <div class="info-card">
-        <h4 style="margin:0; color:#667eea;">🎯 Ready to Forecast</h4>
-        <p>Input price lalu klik <b>Generate Forecast</b></p>
+        <h4 style="margin:0;">🎯 Ready to Forecast</h4>
+        <p>Atur parameter di sidebar lalu klik <b>Generate Forecast</b></p>
     </div>
     """, unsafe_allow_html=True)
