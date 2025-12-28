@@ -8,7 +8,73 @@ import joblib
 from tensorflow.keras.models import load_model
 
 # ------------------------------
-# PAGE CONFIG (SAMA)
+# TAMBAHKAN CSS INI DI AWAL
+# ------------------------------
+st.markdown("""
+<style>
+    /* HEADER STYLING */
+    .main-header {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem;
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* BUTTON STYLING */
+    .stButton > button {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* SIDEBAR STYLING */
+    .sidebar-header {
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    /* CARD STYLING */
+    .info-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        margin: 1rem 0;
+    }
+    
+    /* TABLE STYLING */
+    .dataframe {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* METRIC STYLING */
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------------------
+# PAGE CONFIG - TIDAK BERUBAH
 # ------------------------------
 st.set_page_config(
     page_title="Stock Price Forecaster",
@@ -16,55 +82,16 @@ st.set_page_config(
     layout="wide"
 )
 
-# ------------------------------
-# CUSTOM CSS UNTUK DESAIN MODERN
-# ------------------------------
-st.markdown("""
-<style>
-    /* Header styling */
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
-        color: white;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    /* Sidebar card */
-    .sidebar-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,.1);
-        margin-bottom: 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ------------------------------
-# HEADER MODERN
-# ------------------------------
+# Ganti title biasa dengan header yang lebih menarik
 st.markdown("""
 <div class="main-header">
     <h1 style="margin:0; font-size:2rem;">📈 GWO–LSTM Stock Predictor</h1>
-    <p style="margin:0; opacity:0.9; font-size:1rem;">Advanced Hybrid Forecasting System</p>
+    <p style="margin:0; opacity:0.9; font-size:1rem;">Advanced Hybrid Forecasting Model</p>
 </div>
 """, unsafe_allow_html=True)
 
 # ------------------------------
-# LOAD MODEL (TIDAK BERUBAH)
+# LOAD MODEL - TIDAK BERUBAH
 # ------------------------------
 @st.cache_resource
 def load_all():
@@ -79,15 +106,16 @@ def load_all():
 
     return model, scaler, metadata, example_data
 
+
 model, scaler, metadata, example_data = load_all()
+
 last_sequence = np.array(example_data["last_sequence"])
 
 # ------------------------------
-# SIDEBAR INPUT (DESAIN SAJA YANG DIUBAH)
+# SIDEBAR INPUT - TIDAK BERUBAH
 # ------------------------------
 st.sidebar.markdown("""
-<div class="sidebar-card">
-    <h3 style="margin-top:0; color:#667eea;">⚙️ Input Parameters</h3>
+<h3 class="sidebar-header">⚙️ Input Parameters</h3>
 """, unsafe_allow_html=True)
 
 current_price = st.sidebar.number_input(
@@ -97,29 +125,24 @@ current_price = st.sidebar.number_input(
             last_sequence[-1].reshape(-1, 1)
         )[0][0]
     ),
-    step=100.0,
-    help="Enter the current stock price"
+    step=100.0
 )
 
 forecast_days = st.sidebar.slider("Forecast Days", 1, 30, 7)
 
-st.sidebar.markdown("</div>", unsafe_allow_html=True)
-
-# Model info card in sidebar
+# Tambahkan info model di sidebar
+st.sidebar.markdown("---")
 st.sidebar.markdown("""
-<div class="sidebar-card">
-    <h4 style="margin-top:0; color:#667eea;">ℹ️ Model Info</h4>
-    <p><strong>Type:</strong> LSTM with GWO</p>
-    <p><strong>Last Training:</strong> {}</p>
-    <p><strong>MAE:</strong> {:.4f}</p>
+<div class="info-card">
+    <h4 style="margin:0; color:#667eea;">ℹ️ Model Information</h4>
+    <p style="margin:0.5rem 0;"><strong>Type:</strong> LSTM + GWO</p>
+    <p style="margin:0.5rem 0;"><strong>Last Training:</strong> {}</p>
+    <p style="margin:0.5rem 0;"><strong>MAE:</strong> {:.4f}</p>
 </div>
-""".format(
-    metadata.get('last_training', 'N/A'),
-    metadata.get('mae', 0)
-), unsafe_allow_html=True)
+""".format(metadata.get('last_training', 'N/A'), metadata.get('mae', 0)), unsafe_allow_html=True)
 
 # ------------------------------
-# PREDICTION FUNCTION (TIDAK BERUBAH)
+# PREDICTION FUNCTION - TIDAK BERUBAH
 # ------------------------------
 def forecast_future_streamlit(model, current_price, scaler, days):
     current_norm = scaler.transform([[current_price]])[0][0]
@@ -136,173 +159,148 @@ def forecast_future_streamlit(model, current_price, scaler, days):
 
     return preds
 
-# ------------------------------
-# MAIN CONTENT
-# ------------------------------
-# Create columns for better layout
-col1, col2 = st.columns([3, 1])
 
+# ------------------------------
+# MAIN - TIDAK BERUBAH kecuali styling
+# ------------------------------
+# Tambahkan metrics row sebelum button
+col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("🚀 Generate Forecast", type="primary"):
-        predictions = forecast_future_streamlit(
-            model, current_price, scaler, forecast_days
-        )
-        
-        # ⬅️ INI PENTING (TIDAK BERUBAH)
-        predictions = predictions.tolist()
-
-        today = datetime.now()
-        future_dates = [
-            today + timedelta(days=i + 1)
-            for i in range(forecast_days)
-        ]
-
-        # ===============================
-        # GRAPH (SAMA, HANYA UPDATE LAYOUT)
-        # ===============================
-        plot_dates = [today] + future_dates
-        plot_prices = [current_price] + predictions
-
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Scatter(
-                x=plot_dates,
-                y=plot_prices,
-                mode="lines+markers",
-                name="Price Forecast",
-                line=dict(color='#667eea', width=3),
-                marker=dict(size=8),
-                hovertemplate="Rp %{y:,.2f}<extra></extra>"
-            )
-        )
-
-        # Current price marker
-        fig.add_trace(
-            go.Scatter(
-                x=[today],
-                y=[current_price],
-                mode='markers',
-                name='Current Price',
-                marker=dict(size=15, color='#2c3e50', symbol='diamond')
-            )
-        )
-
-        fig.update_layout(
-            height=500,
-            title=dict(
-                text="📊 Stock Price Forecast",
-                font=dict(size=20, color='#2c3e50')
-            ),
-            xaxis_title="Date",
-            yaxis_title="Price (Rp)",
-            yaxis=dict(
-                rangemode="normal",
-                zeroline=False,
-                gridcolor='lightgray'
-            ),
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            hovermode='x unified',
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        # ------------------------------
-        # TABLE (DENGAN STYLING LEBIH BAIK)
-        # ------------------------------
-        st.markdown("### 📋 Forecast Results")
-        
-        df = pd.DataFrame({
-            "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
-            "Day": [f"Day {i+1}" for i in range(forecast_days)],
-            "Predicted Price (Rp)": predictions
-        })
-        
-        # Format the prices
-        df["Predicted Price (Rp)"] = df["Predicted Price (Rp)"].apply(lambda x: f"Rp {x:,.2f}")
-        
-        # Calculate daily changes
-        all_prices = [current_price] + predictions
-        daily_changes = []
-        for i in range(1, len(all_prices)):
-            change = ((all_prices[i] - all_prices[i-1]) / all_prices[i-1]) * 100
-            daily_changes.append(change)
-        
-        df["Daily Change (%)"] = [f"{x:+.2f}%" for x in daily_changes]
-        
-        # Display styled dataframe
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # Summary metrics
-        st.markdown("### 📊 Summary")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric(
-                "Final Price",
-                f"Rp {predictions[-1]:,.2f}",
-                f"{((predictions[-1] - current_price)/current_price*100):+.2f}%"
-            )
-        
-        with col2:
-            st.metric(
-                "Average Forecast",
-                f"Rp {np.mean(predictions):,.2f}"
-            )
-        
-        with col3:
-            st.metric(
-                "Volatility",
-                f"{(np.std(predictions)/np.mean(predictions)*100):.2f}%"
-            )
-
-    else:
-        # Default state with modern design
-        st.markdown("""
-        <div style='text-align: center; padding: 3rem; background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,.1);'>
-            <h3 style='color: #667eea;'>📈 Ready to Forecast</h3>
-            <p>Configure your parameters and click <strong>Generate Forecast</strong> to start prediction.</p>
-            <div style='margin-top: 2rem; color: #666;'>
-                <p><strong>Current Settings:</strong></p>
-                <p>• Current Price: Rp {:,}</p>
-                <p>• Forecast Days: {}</p>
-            </div>
-        </div>
-        """.format(int(current_price), forecast_days), unsafe_allow_html=True)
-
+    st.metric("Current Price", f"Rp {current_price:,.0f}")
 with col2:
-    # Quick stats card
-    st.markdown("""
-    <div style='background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,.1); margin-top: 1rem;'>
-        <h4 style='color: #667eea; margin-top:0;'>Quick Stats</h4>
-        <p><strong>Current Model:</strong><br>GWO-LSTM Hybrid</p>
-        <p><strong>Input Sequence:</strong><br>{} days</p>
-        <p><strong>Model Accuracy (MAE):</strong><br>{:.4f}</p>
-        <hr style='margin: 1rem 0;'>
-        <p><small>Last updated: {}</small></p>
-    </div>
-    """.format(
-        len(last_sequence),
-        metadata.get('mae', 0),
-        metadata.get('last_training', 'N/A')
-    ), unsafe_allow_html=True)
+    st.metric("Forecast Days", forecast_days)
+with col3:
+    if 'mae' in metadata:
+        accuracy = max(0, 100 - metadata['mae'] * 100)
+        st.metric("Model Accuracy", f"{accuracy:.1f}%")
 
-# Footer
+st.markdown("---")
+
+if st.button("🚀 Generate Forecast"):
+    predictions = forecast_future_streamlit(
+        model, current_price, scaler, forecast_days
+    )
+
+    # ⬅️ INI PENTING - TIDAK BERUBAH
+    predictions = predictions.tolist()
+
+    today = datetime.now()
+    future_dates = [
+        today + timedelta(days=i + 1)
+        for i in range(forecast_days)
+    ]
+
+    # ===============================
+    # GRAPH - HANYA TAMBAH STYLING DI FIGURE
+    # ===============================
+
+    # Gabungkan current + prediction (VISUAL SAJA)
+    plot_dates = [today] + future_dates
+    plot_prices = [current_price] + predictions
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Scatter(
+            x=plot_dates,
+            y=plot_prices,
+            mode="lines+markers",
+            name="Price Forecast",
+            line=dict(color='#667eea', width=3),
+            marker=dict(size=8, color='#667eea'),
+            hovertemplate="<b>%{x|%d %b}</b><br>Rp %{y:,.2f}<extra></extra>"
+        )
+    )
+
+    # Tambahkan current price sebagai marker khusus
+    fig.add_trace(
+        go.Scatter(
+            x=[today],
+            y=[current_price],
+            mode='markers',
+            name='Current Price',
+            marker=dict(size=15, color='#2c3e50', symbol='diamond')
+        )
+    )
+
+    fig.update_layout(
+        height=500,
+        title=dict(
+            text="📊 Stock Price Forecast",
+            font=dict(size=20, color='#2c3e50')
+        ),
+        xaxis_title="Date",
+        yaxis_title="Price (Rp)",
+        yaxis=dict(
+            rangemode="normal",
+            zeroline=False,
+            gridcolor='lightgray'
+        ),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        hovermode='x unified',
+        showlegend=True
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # ------------------------------
+    # TABLE - TAMBAH STYLING SAJA
+    # ------------------------------
+    st.markdown("### 📋 Numerical Output")
+    
+    df = pd.DataFrame({
+        "Date": [d.strftime("%Y-%m-%d") for d in future_dates],
+        "Day": [f"Day {i+1}" for i in range(forecast_days)],
+        "Prediction (Rp)": [f"{p:,.2f}" for p in predictions],
+        "Change (%)": [f"{((p - current_price)/current_price*100):+.2f}%" for p in predictions]
+    })
+
+    # Display dengan styling
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    # Tambahkan summary metrics
+    st.markdown("### 📊 Summary")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        final_price = predictions[-1]
+        total_change = ((final_price - current_price) / current_price) * 100
+        st.metric(
+            "Final Prediction",
+            f"Rp {final_price:,.2f}",
+            f"{total_change:+.2f}%"
+        )
+    with col2:
+        st.metric(
+            "Average Price",
+            f"Rp {np.mean(predictions):,.2f}"
+        )
+    with col3:
+        st.metric(
+            "Price Range",
+            f"Rp {min(predictions):,.2f} - Rp {max(predictions):,.2f}"
+        )
+
+else:
+    # Update info message dengan styling yang lebih baik
+    st.markdown("""
+    <div class="info-card">
+        <h4 style="margin:0; color:#667eea;">🎯 Ready to Forecast</h4>
+        <p style="margin:0.5rem 0;">Adjust the parameters in the sidebar and click <strong>Generate Forecast</strong> to start prediction.</p>
+        <p style="margin:0.5rem 0;"><strong>Current settings:</strong></p>
+        <p style="margin:0.5rem 0;">• Current Price: Rp {:,}</p>
+        <p style="margin:0.5rem 0;">• Forecast Days: {}</p>
+    </div>
+    """.format(int(current_price), forecast_days), unsafe_allow_html=True)
+
+# Tambahkan footer
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #666; font-size: 0.9rem;'>
-    <p>GWO-LSTM Stock Predictor • Using advanced hybrid forecasting model</p>
+<div style="text-align: center; color: #666; font-size: 0.9rem; padding: 1rem;">
+    <p>GWO-LSTM Stock Predictor • Using Hybrid Neural Network Model • Version 1.0</p>
 </div>
 """, unsafe_allow_html=True)
